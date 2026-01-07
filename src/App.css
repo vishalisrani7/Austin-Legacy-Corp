@@ -1,0 +1,96 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import "tailwindcss";
+
+.marquee {
+  display: flex;
+  animation: scroll 20s linear infinite;
+}
+
+.jetbrains {
+  font-family: "JetBrains Mono", monospace !important;
+  font-optical-sizing: auto;
+}
+
+
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+.step-section {
+  scroll-snap-align: start;
+}
+#stagewise-toolbar-root {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  z-index: 999999;
+}
+.marquee-reverse {
+  animation: marquee-reverse 22s linear infinite;
+}
+
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.ticker-item {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s;
+}
+.ticker-item:hover {
+  color: #fff;
+}
+
+.tech-icon {
+  display: inline-block;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ticker-item:hover .tech-icon {
+  transform: rotate(360deg) scale(1.15);
+}
+
+.marquee-reverse .ticker-item:hover {
+  transform: translateY(-6px) rotate(4deg);
+}
+.marquee .ticker-item:hover {
+  transform: translateY(-6px) rotate(-4deg);
+}
+html, body {
+  cursor: none !important;
+  caret-color: transparent !important;
+}
+
+.no-cursor {
+  cursor: none;
+}
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 12s linear infinite;
+}
+* {
+  cursor: none !important;
+  caret-color: transparent !important;
+}
+
+a, button, input, textarea, select {
+  cursor: none !important;
+}
+
