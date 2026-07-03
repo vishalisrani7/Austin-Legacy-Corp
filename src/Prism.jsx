@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, forwardRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
@@ -26,9 +25,11 @@ uniform float waveSpeed;
 uniform float waveFrequency;
 uniform float waveAmplitude;
 uniform vec3 waveColor;
+uniform vec3 backgroundColor;
 uniform vec2 mousePos;
 uniform int enableMouseInteraction;
 uniform float mouseRadius;
+uniform float mouseStrength; // New Uniform to control effect direction
 
 vec4 mod289(vec4 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
 vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
@@ -91,9 +92,14 @@ void main() {
     mouseNDC.x *= resolution.x / resolution.y;
     float dist = length(uv - mouseNDC);
     float effect = 1.0 - smoothstep(0.0, mouseRadius, dist);
-    f -= 0.5 * effect;
+    
+    // Use the dynamic strength. 
+    // Negative value erases waves (Dark mode style)
+    // Positive value adds density (Light mode style)
+    f += mouseStrength * effect; 
   }
-  vec3 col = mix(vec3(0.0), waveColor, f);
+  
+  vec3 col = mix(backgroundColor, waveColor, f);
   gl_FragColor = vec4(col, 1.0);
 }
 `;
@@ -170,11 +176,13 @@ function DitheredWaves({
   waveFrequency,
   waveAmplitude,
   waveColor,
+  backgroundColor,
   colorNum,
   pixelSize,
   disableAnimation,
   enableMouseInteraction,
-  mouseRadius
+  mouseRadius,
+  mouseStrength // Added prop
 }) {
   const mesh = useRef(null);
   const mouseRef = useRef(new THREE.Vector2());
@@ -187,9 +195,11 @@ function DitheredWaves({
     waveFrequency: new THREE.Uniform(waveFrequency),
     waveAmplitude: new THREE.Uniform(waveAmplitude),
     waveColor: new THREE.Uniform(new THREE.Color(...waveColor)),
+    backgroundColor: new THREE.Uniform(new THREE.Color(...backgroundColor)),
     mousePos: new THREE.Uniform(new THREE.Vector2(0, 0)),
     enableMouseInteraction: new THREE.Uniform(enableMouseInteraction ? 1 : 0),
-    mouseRadius: new THREE.Uniform(mouseRadius)
+    mouseRadius: new THREE.Uniform(mouseRadius),
+    mouseStrength: new THREE.Uniform(mouseStrength) // Added uniform
   });
 
   useEffect(() => {
@@ -202,7 +212,9 @@ function DitheredWaves({
     }
   }, [size, gl]);
 
-  const prevColor = useRef([...waveColor]);
+  const prevWaveColor = useRef([...waveColor]);
+  const prevBackgroundColor = useRef([...backgroundColor]);
+
   useFrame(({ clock }) => {
     const u = waveUniformsRef.current;
 
@@ -214,13 +226,19 @@ function DitheredWaves({
     if (u.waveFrequency.value !== waveFrequency) u.waveFrequency.value = waveFrequency;
     if (u.waveAmplitude.value !== waveAmplitude) u.waveAmplitude.value = waveAmplitude;
 
-    if (!prevColor.current.every((v, i) => v === waveColor[i])) {
+    if (!prevWaveColor.current.every((v, i) => v === waveColor[i])) {
       u.waveColor.value.set(...waveColor);
-      prevColor.current = [...waveColor];
+      prevWaveColor.current = [...waveColor];
+    }
+
+    if (!prevBackgroundColor.current.every((v, i) => v === backgroundColor[i])) {
+      u.backgroundColor.value.set(...backgroundColor);
+      prevBackgroundColor.current = [...backgroundColor];
     }
 
     u.enableMouseInteraction.value = enableMouseInteraction ? 1 : 0;
     u.mouseRadius.value = mouseRadius;
+    u.mouseStrength.value = mouseStrength; // Update strength
 
     if (enableMouseInteraction) {
       u.mousePos.value.copy(mouseRef.current);
@@ -267,11 +285,13 @@ export default function Dither({
   waveFrequency = 3,
   waveAmplitude = 0.3,
   waveColor = [0.5, 0.5, 0.5],
+  backgroundColor = [0, 0, 0],
   colorNum = 4,
   pixelSize = 2,
   disableAnimation = false,
   enableMouseInteraction = true,
-  mouseRadius = 1
+  mouseRadius = 1,
+  mouseStrength = -0.5 // Default to erase effect (Dark Mode style)
 }) {
   return (
     <Canvas
@@ -285,11 +305,13 @@ export default function Dither({
         waveFrequency={waveFrequency}
         waveAmplitude={waveAmplitude}
         waveColor={waveColor}
+        backgroundColor={backgroundColor}
         colorNum={colorNum}
         pixelSize={pixelSize}
         disableAnimation={disableAnimation}
         enableMouseInteraction={enableMouseInteraction}
         mouseRadius={mouseRadius}
+        mouseStrength={mouseStrength}
       />
     </Canvas>
   );

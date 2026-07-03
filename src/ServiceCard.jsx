@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import ViewportDecryptedText from "./ViewportDecryptedText";
 
 const ServiceCard = ({ title, HeaderIcon, Icon, from, to, bgImage }) => {
   return (
@@ -22,7 +23,7 @@ const ServiceCard = ({ title, HeaderIcon, Icon, from, to, bgImage }) => {
           <div className="h-3 w-3 rounded-full bg-zinc-500" />
         )}
         <span className="text-sm font-medium tracking-wide text-zinc-300">
-          {title}
+          <ViewportDecryptedText text={title} />
         </span>
       </div>
 

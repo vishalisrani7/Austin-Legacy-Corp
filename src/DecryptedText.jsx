@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion'; // Check if you use motion/react or framer-motion
 
 export default function DecryptedText({
   text,
   speed = 50,
   maxIterations = 10,
-  sequential = false,
+  sequential = true,
   revealDirection = 'start',
   useOriginalCharsOnly = false,
   characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+',
@@ -38,19 +38,33 @@ export default function DecryptedText({
   const [hasAnimated, setHasAnimated] = useState(false);
   const containerRef = useRef(null);
 
+  const resetAnimation = () => {
+    setIsHovering(false);
+    setHasAnimated(false);
+    setIsScrambling(false);
+    setRevealedIndices(new Set());
+    setDisplayText(generateScrambledText(text, characters));
+  };
+
+  const startAnimation = () => {
+    setRevealedIndices(new Set());
+    setDisplayText(generateScrambledText(text, characters));
+    setHasAnimated(false);
+    setIsHovering(true);
+  };
+
+  useEffect(() => {
+    resetAnimation();
+  }, [text, characters]);
+
   useEffect(() => {
     if (animate === true) {
       const timer = setTimeout(() => {
-        setIsHovering(true);
-        setHasAnimated(true);
+        startAnimation();
       }, startDelay);
       return () => clearTimeout(timer);
     } else if (animate === false) {
-      setIsHovering(false);
-      setHasAnimated(false);
-      setIsScrambling(false);
-      setRevealedIndices(new Set());
-      setDisplayText(generateScrambledText(text, characters));
+      resetAnimation();
     }
   }, [animate, startDelay, text, characters]);
 
@@ -61,80 +75,30 @@ export default function DecryptedText({
     const getNextIndex = (revealedSet) => {
       const textLength = text.length;
       switch (revealDirection) {
-        case 'start':
+        case 'start': // Left to Right
           return revealedSet.size;
-        case 'end':
+        case 'end': // Right to Left
           return textLength - 1 - revealedSet.size;
         case 'center': {
           const middle = Math.floor(textLength / 2);
           const offset = Math.floor(revealedSet.size / 2);
-          const nextIndex =
-            revealedSet.size % 2 === 0
-              ? middle + offset
-              : middle - offset - 1;
-
-          if (
-            nextIndex >= 0 &&
-            nextIndex < textLength &&
-            !revealedSet.has(nextIndex)
-          ) {
-            return nextIndex;
-          }
-          for (let i = 0; i < textLength; i++) {
-            if (!revealedSet.has(i)) return i;
-          }
-          return 0;
+          return revealedSet.size % 2 === 0 ? middle + offset : middle - offset - 1;
         }
         default:
           return revealedSet.size;
       }
     };
 
-    const availableChars = useOriginalCharsOnly
-      ? Array.from(new Set(text.split(''))).filter((char) => char !== ' ')
-      : characters.split('');
-
     const shuffleText = (originalText, currentRevealed) => {
-      if (useOriginalCharsOnly) {
-        const positions = originalText.split('').map((char, i) => ({
-          char,
-          isSpace: char === ' ',
-          index: i,
-          isRevealed: currentRevealed.has(i),
-        }));
-
-        const nonSpaceChars = positions
-          .filter((p) => !p.isSpace && !p.isRevealed)
-          .map((p) => p.char);
-
-        for (let i = nonSpaceChars.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [nonSpaceChars[i], nonSpaceChars[j]] = [
-            nonSpaceChars[j],
-            nonSpaceChars[i],
-          ];
-        }
-
-        let charIndex = 0;
-        return positions
-          .map((p) => {
-            if (p.isSpace) return ' ';
-            if (p.isRevealed) return originalText[p.index];
-            return nonSpaceChars[charIndex++];
-          })
-          .join('');
-      } else {
-        return originalText
-          .split('')
-          .map((char, i) => {
-            if (char === ' ') return ' ';
-            if (currentRevealed.has(i)) return originalText[i];
-            return availableChars[
-              Math.floor(Math.random() * availableChars.length)
-            ];
-          })
-          .join('');
-      }
+      const availableChars = characters.split('');
+      return originalText
+        .split('')
+        .map((char, i) => {
+          if (char === ' ') return ' ';
+          if (currentRevealed.has(i)) return originalText[i]; // Revealed stays same
+          return availableChars[Math.floor(Math.random() * availableChars.length)];
+        })
+        .join('');
     };
 
     if (isHovering) {
@@ -151,14 +115,18 @@ export default function DecryptedText({
             } else {
               clearInterval(interval);
               setIsScrambling(false);
+              setHasAnimated(true);
+              setDisplayText(text);
               return prevRevealed;
             }
           } else {
+            // Non-sequential fallback
             setDisplayText(shuffleText(text, prevRevealed));
             currentIteration++;
             if (currentIteration >= maxIterations) {
               clearInterval(interval);
               setIsScrambling(false);
+              setHasAnimated(true);
               setDisplayText(text);
             }
             return prevRevealed;
@@ -167,71 +135,52 @@ export default function DecryptedText({
       }, speed);
     }
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [
-    isHovering,
-    text,
-    speed,
-    maxIterations,
-    sequential,
-    revealDirection,
-    characters,
-    useOriginalCharsOnly,
-  ]);
+    return () => clearInterval(interval);
+  }, [isHovering, text, speed, maxIterations, sequential, revealDirection, characters]);
 
   useEffect(() => {
-    if (typeof animate !== 'undefined') return;
-    if (animateOn !== 'view' && animateOn !== 'both') return;
+    if (typeof animate !== 'undefined' || animateOn !== 'view') return;
 
-    const observerCallback = (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting && !hasAnimated) {
-          setIsHovering(true);
-          setHasAnimated(true);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startAnimation();
+        } else {
+          resetAnimation();
         }
-      });
-    };
+      },
+      { threshold: 0.1 }
+    );
 
-    const observerOptions = {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.1,
-    };
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [animate, animateOn, text, characters]);
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    const currentRef = containerRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-    };
-  }, [animateOn, hasAnimated, animate]);
+  const interactiveProps =
+    typeof animate === 'undefined' && animateOn === 'hover'
+      ? {
+          onMouseEnter: startAnimation,
+          onMouseLeave: resetAnimation,
+        }
+      : {};
 
   return (
     <motion.span
       ref={containerRef}
-      className={`inline-block whitespace-pre-wrap jetbrains ${parentClassName}`}
-      style={{ fontFamily: '"JetBrains Mono", monospace' }} // FORCE FONT HERE
+      className={`inline-block whitespace-pre-wrap ${parentClassName}`}
+      {...interactiveProps}
       {...props}
     >
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
         {displayText.split('').map((char, index) => {
-          const isRevealedOrDone =
-            revealedIndices.has(index) || !isScrambling || !isHovering;
+          // Logic to check if this specific character should show as decrypted
+          const isDone = revealedIndices.has(index) || (!isScrambling && hasAnimated);
 
           return (
             <span
               key={index}
-              className={
-                isRevealedOrDone && isHovering
-                  ? className
-                  : encryptedClassName
-              }
+              className={isDone ? className : encryptedClassName}
             >
               {char}
             </span>

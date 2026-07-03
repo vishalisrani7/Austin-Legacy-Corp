@@ -16,7 +16,6 @@ const LetterGlitch = ({
   const lastGlitchTime = useRef(Date.now());
 
   const lettersAndSymbols = Array.from(characters);
-
   const fontSize = 16;
   const charWidth = 10;
   const charHeight = 20;

@@ -1,0 +1,92 @@
+/* Hero.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  color: white;
+}
+
+/* 1. THE MAIN STAGE */
+.scroll-container {
+  /* No fixed height here; GSAP will pin the viewport */
+  position: relative;
+  width: 100%;
+}
+
+.pinned-viewport {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 2. LAYERS (Z-Index Hierarchy) */
+.layer-white { z-index: 5; background: white; }
+.layer-mountain { z-index: 10; }
+.layer-canvas { z-index: 50; }
+
+/* 3. WHITE INTRO SCENE */
+.scene-intro {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; justify-content: center; align-items: center;
+  background: white;
+}
+
+/* 4. THE RISING MOUNTAIN */
+.mountain-bg {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400vw; 
+  height: 400vw;
+  background-color: #050505;
+  border-radius: 50%;
+  top: 100vh; /* Start below screen */
+}
+
+/* 5. MOVING CANVAS (Holds Line & Text) */
+.content-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  /* We will translate this UP with GSAP */
+}
+
+.main-title {
+  position: absolute;
+  top: 20vh;
+  width: 100%;
+  text-align: center;
+  opacity: 0; /* Hidden initially */
+}
+.main-title h1 {
+  font-size: 4.5rem; font-weight: 400; line-height: 1.1; margin: 0;
+}
+
+/* 6. SVG LINE */
+.svg-track {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 2500px; /* Long canvas for the snake */
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* 7. MARKERS */
+.marker {
+  position: absolute;
+  font-family: monospace;
+  opacity: 0; /* Handled by GSAP */
+}
+.marker-label { color: #ff6a00; font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 5px; }
+.marker h3 { font-family: 'Inter', sans-serif; font-size: 1.5rem; margin: 0; font-weight: 500; }

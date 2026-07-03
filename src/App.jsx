@@ -2,14 +2,9 @@ import React, {
   useState,
   useRef,
   useEffect,
-  forwardRef,
-  useImperativeHandle,
-  useMemo,
-  Children,
-  cloneElement,
-  isValidElement,
 } from "react";
 import DecryptedText from "./DecryptedText";
+import ViewportDecryptedText from "./ViewportDecryptedText";
 import {
   SiPython,
   SiFlutter,
@@ -19,6 +14,7 @@ import {
   SiWebflow,
   SiReact,
 } from "react-icons/si";
+import { GlowingEffect } from "./GlowingEffect";
 import { TbBrandNextjs } from "react-icons/tb";
 import "./App.css";
 import { gsap } from "gsap";
@@ -37,55 +33,117 @@ import {
   PenTool,
   Gamepad2,
   Megaphone,
-  Layout,
-  
   Cpu,
   Bot,
   Search,
   Wrench,
   BrainCircuit,
+  Sun, 
+  Moon,
+  Car
 } from "lucide-react";
 import Footer from "./Footer";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+// import GestureController from "./gesture/GestureController";
+import ParticleMap from "./ParticleMap";
+import HeroAnimation from "./HeroAnimation";
+import Portfolio from "./portfolio";
+import Review from "./Review";
+import Hyperspeed from './HyperSpeed';
+import ScrollBasedStory from "./ScrollBasedStory";
+import HowWeDo from "./HowWeDo";
+import CardSection from "./CardSection";
+import PortalOneLanding from "./PortalOOneLanding";
+import { TrainIntro, TrainOutro } from "./MetroTransition";
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 function CustomCursor() {
   const [isClicking, setIsClicking] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const cursorRef = useRef(null);
+  const prevX = useRef(0);
 
   useEffect(() => {
-    const isTouchDevice =
-      "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) return;
+    const updateVisibility = () => {
+      setIsHidden(
+        document.body.classList.contains("is-ani-loader-active") ||
+          document.body.classList.contains("is-metro-intro-active") ||
+          document.body.classList.contains("is-metro-outro-active")
+      );
+    };
 
-    const moveCursor = (e) => {
-      const cursor = cursorRef.current;
-      if (cursor) {
-        cursor.style.left = e.clientX + "px";
-        cursor.style.top = e.clientY + "px";
-      }
+    updateVisibility();
+    window.addEventListener("cursor-visibility-change", updateVisibility);
+
+    return () => {
+      window.removeEventListener("cursor-visibility-change", updateVisibility);
+    };
+  }, []);
+
+  const moveCursor = (clientX, clientY) => {
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+
+    const deltaX = clientX - prevX.current;
+    prevX.current = clientX;
+
+    const rotate = Math.max(Math.min(deltaX * 0.8, 30), -30);
+    const skew = Math.max(Math.min(deltaX * 0.35, 15), -15);
+
+    cursor.style.transform = `
+      translate3d(${clientX}px, ${clientY}px, 0) 
+      translate(-50%, -50%)
+      rotate(${rotate}deg)
+      skewX(${-skew}deg)
+    `;
+  };
+
+  useEffect(() => {
+    const handleVirtualMove = (e) => {
+      moveCursor(e.detail.x, e.detail.y);
+    };
+    const handleVirtualClick = (e) => {
+      setIsClicking(e.detail.isClicking);
+    };
+    window.addEventListener("virtual-move", handleVirtualMove);
+    window.addEventListener("virtual-click", handleVirtualClick);
+    return () => {
+      window.removeEventListener("virtual-move", handleVirtualMove);
+      window.removeEventListener("virtual-click", handleVirtualClick); 
+    };
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+
+    const handleMouseMove = (e) => {
+       moveCursor(e.clientX, e.clientY);
+       setIsClicking(false); 
     };
 
     const handleMouseDown = () => setIsClicking(true);
     const handleMouseUp = () => setIsClicking(false);
 
-    window.addEventListener("mousemove", moveCursor);
+    window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mouseup", handleMouseUp);
-
     return () => {
-      window.removeEventListener("mousemove", moveCursor);
+      window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
 
+  if (isHidden) return null;
+
   return (
     <div
       ref={cursorRef}
-      className={`hidden lg:block pointer-events-none fixed z-[9999] w-10 h-10 ml-5 mt-5
-        -translate-x-1/2 -translate-y-1/2 transition-transform duration-150
-        `}
+      className="hidden lg:block pointer-events-none fixed top-3 left-0 z-[999999999]
+        w-15 h-15 transition-transform duration-100 ease-out will-change-transform"
       style={{
+        width: "70px", 
+        height: "70px", 
         backgroundImage: `url(${isClicking ? "/Click.png" : "/Normal.png"})`,
         backgroundSize: "contain",
         backgroundRepeat: "no-repeat",
@@ -93,8 +151,130 @@ function CustomCursor() {
     />
   );
 }
+
+function StatsSection() {
+  const steps = [
+    {
+      id: "01",
+      title: "Unlocking the opportunity",
+      subtitle: "Business strategy",
+      content: [
+        "Before anything beautiful or brilliant gets built, we dig into the core of your business. We ask uncomfortably smart questions, uncover truths, and map where the real value lives. No random feature factories here — only direction that matters. The outcome? A strategy engineered to win.",
+      ],
+    },
+    {
+      id: "02",
+      title: "We help solve a range of business challenges",
+      subtitle: "Design & Execution",
+      content: [
+        "Once the path is clear, we design and prototype like scientists in a creative lab. We test, break, refine, repeat — until ideas become solutions people actually care about. Call it innovation, call it problem-solving. We call it Tuesday.",
+      ],
+    },
+    {
+      id: "03",
+      title: "Driving adoption and scale",
+      subtitle: "Growth & Analysis",
+      content: [
+        "Launching is just the kickoff. We help you define KPIs, set up analytics, and track what users love (and what they pretend to love). Our data detectives hunt for improvements to maximize performance and growth. We equip your team to scale independently.",
+      ],
+    },
+    {
+      id: "04",
+      title: "Sustained Innovation & Support",
+      subtitle: "Long-term Partnership",
+      content: [
+        "After launch, the evolution continues. Monitoring, updates, enhancements, improvements — continuous progress that keeps you ahead of change, not catching up to it.",
+      ],
+    },
+  ];
+
+  return (
+    <div className="w-full font-sans pb-10 lg:pb-20">
+      {steps.map((step, index) => (
+        <div
+          key={index}
+          className="relative flex flex-col lg:flex-row w-full group"
+        >
+          <div className="w-full lg:w-[25%] px-6 lg:pl-20 pb-4 lg:pb-12 pt-8 lg:pt-0">
+            <div className="static lg:sticky lg:top-12">
+              <div className="text-[80px] lg:text-[150px] leading-none font-bold tracking-tighter opacity-90">
+                {step.id}
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={`w-full lg:w-[75%] flex flex-col lg:flex-row pt-4 lg:pt-10 pb-12 lg:pb-20 px-6 lg:pr-20 ${
+              index !== 0
+                ? "border-t border-gray-300/20 lg:border-gray-300"
+                : ""
+            }`}
+          >
+            <div className="w-full lg:w-[40%] pr-0 lg:pr-10 pt-2 mb-6 lg:mb-0">
+              <h2 className="text-3xl lg:text-4xl font-bold mb-3 lg:mb-4 leading-tight">
+                {step.title}
+              </h2>
+              <h3 className="text-base lg:text-lg font-medium opacity-60 mt-2">
+                <ViewportDecryptedText text={step.subtitle} />
+              </h3>
+            </div>
+
+            <div className="w-full lg:w-[60%] pl-0 lg:pl-20 lg:pr-20 text-lg lg:text-2xl leading-relaxed opacity-90">
+              <p className="whitespace-pre-line">{step.content.join(" ")}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HyperSpeedSection() {
+  useGSAP(() => {
+    ScrollTrigger.create({
+      trigger: "#HyperSpeed",
+      start: "top top",
+      end: "+=1000",
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+    });
+  }, []);
+
+  return (
+    <section id="HyperSpeed" className="relative w-full h-screen overflow-hidden bg-black z-20">
+      <div className="absolute top-20 left-0 w-full z-20 text-center pointer-events-none">
+        <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-white uppercase jetbrains">
+          Fast-Track Innovation
+        </h2>
+        
+        <div className="mt-4 text-lg">
+          <ViewportDecryptedText 
+            text="Experience the speed of our deployment"
+            speed={30}
+            className="text-zinc-400"
+            encryptedClassName="text-zinc-600"
+          />
+        </div>
+      </div>
+      <div className="w-full h-full">
+        <Hyperspeed />
+      </div>
+    </section>
+  );
+}
+
 function App() {
-  gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+  const [theme, setTheme] = useState("dark");
+  const [scrolled, setScrolled] = useState(false);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const bgColor = theme === "dark" ? "bg-black" : "bg-white";
+  const textColor = theme === "dark" ? "text-white" : "text-black";
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -102,6 +282,7 @@ function App() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   const scrollToSection = (id) => {
     const section = document.getElementById(id);
     if (!section) return;
@@ -115,33 +296,27 @@ function App() {
       ease: "power4.inOut",
     });
   };
-  return (
-    <div className="min-h-screen bg-black text-white">
+return (
+    // Body Background hamesha dark rakhna taaki transition me safed patti na dikhe
+    <div className={`min-h-screen ${textColor} transition-colors duration-500 bg-black`}>
       <CustomCursor />
-      <main className="">
-        <HeroSection scrollToSection={scrollToSection} />
-        <section id="about">
-          <CardStackSection />
-        </section>
-        <section id="processes">
-          <ProcessSection />
-        </section>
-        <section id="stats">
-          <StatsSection />
-        </section>
-      </main>
-      <section id="contact">
-        <Footer />
-      </section>
+      
+      <TrainIntro />
+      
+      <TrainOutro />
+
     </div>
   );
 }
-function HeroSection({ scrollToSection }) {
+
+function HeroSection({ scrollToSection, theme, toggleTheme }) {
   const containerRef = useRef(null);
   const logoRef = useRef(null);
   const navRef = useRef(null);
   const contactRef = useRef(null);
   const tickerRef = useRef(null);
+
+  const isDark = theme === "dark";
 
   const navItems = [
     { label: "About us", href: "#about" },
@@ -151,7 +326,6 @@ function HeroSection({ scrollToSection }) {
   ];
 
   useGSAP(() => {
-    
     const tl = gsap.timeline({
       defaults: { ease: "power3.out" },
       paused: true,
@@ -161,11 +335,9 @@ function HeroSection({ scrollToSection }) {
       [logoRef.current, navRef.current, contactRef.current, tickerRef.current],
       { opacity: 1, y: 0 } 
     );
-
     gsap.set(logoRef.current, { opacity: 0, y: 20 });
     gsap.set([navRef.current, contactRef.current], { opacity: 0, y: 20 });
     gsap.set(tickerRef.current, { opacity: 0, y: 20 });
-
 
     tl.to(logoRef.current, { opacity: 1, y: 0, duration: 1 })
       .to(
@@ -187,15 +359,32 @@ function HeroSection({ scrollToSection }) {
       once: true,
     });
   }, []);
-
   return (
     <section
       ref={containerRef}
-      className="relative h-screen w-full bg-black overflow-hidden"
+      className="relative h-screen w-full overflow-hidden" 
     >
+      <div className="absolute top-8 right-8 z-[10000] pointer-events-auto">
+        <button
+          onClick={toggleTheme}
+          className={`
+            p-4 rounded-full border-4 transition-all duration-300 hover:scale-110 shadow-lg flex items-center justify-center
+            ${isDark 
+              ? 'bg-black border-white text-white hover:bg-white/10' 
+              : 'bg-white border-black text-black hover:bg-black/10'
+            }
+          `}
+          aria-label="Toggle Theme"
+        >
+          {isDark ? <Sun size={28} /> : <Moon size={28} />}
+        </button>
+      </div>
+
       <div className="absolute inset-0 z-0 w-full h-full">
-        <Dither
-          waveColor={[0.5, 0.5, 0.5]}
+        {/* <Dither
+    waveColor={isDark ? [0.5, 0.5, 0.5] : [0.1, 0.1, 0.1]} 
+          backgroundColor={isDark ? [0, 0, 0] : [0.85, 0.85, 0.85]}
+          mouseStrength={isDark ? -0.5 : 0.5}
           disableAnimation={false}
           enableMouseInteraction={true}
           mouseRadius={0.3}
@@ -203,21 +392,45 @@ function HeroSection({ scrollToSection }) {
           waveAmplitude={0.3}
           waveFrequency={3}
           waveSpeed={0.05}
-        />
+        /> */}
       </div>
 
       <div className="relative z-10 w-full h-full max-w-[1600px] mx-auto px-4 md:px-12 pointer-events-none">
-        
-        <div
-          ref={logoRef}
-          className="absolute top-[25%] md:-top-60 left-0 w-full flex justify-center opacity-0"
-        >
-          <img
-            src="/ALC.png"
-            alt="Brand Logo"
-            className="w-[80%] max-w-[400px] md:max-w-none md:w-[1000px] object-contain"
-          />
-        </div>
+<div
+  ref={logoRef}
+  className="absolute top-[25%] md:-top-0 left-0 w-full flex justify-center opacity-0"
+>
+  <div className="relative flex justify-center items-center w-[90%] max-w-[400px] md:max-w-[1000px]">
+    
+    <div 
+      className="absolute z-0"
+      style={{
+        width: '78%',       
+        height: '44%',      
+        top: '45%',         
+        left: '49.2%',       
+        transform: 'translate(-50%, -50%)', 
+        borderRadius: '3rem', 
+      }}
+    >
+       <GlowingEffect 
+          spread={40}     
+          blur={5}         
+          borderWidth={15}  
+          speed={2.5}       
+          glow={true}
+          disabled={false}
+          className="rounded-[inherit]" 
+       />
+    </div>
+
+    <img
+      src="/main2.png"
+      alt="Brand Logo"
+      className="relative z-10 w-full h-auto object-contain pointer-events-none"
+    />
+  </div>
+</div>
 
         <div
           ref={navRef}
@@ -230,21 +443,24 @@ function HeroSection({ scrollToSection }) {
                 const id = href.replace("#", "");
                 scrollToSection(id);
               }}
-              baseColor="#000000ff"
-              pillColor="#f8f8f8ff"
-              pillTextColor="#000000ff"
-              hoveredPillTextColor="#ffffffff"
+              baseColor={isDark ? "#000000ff" : "#ffffff"} 
+              pillColor={isDark ? "#f8f8f8ff" : "#1a1a1a"}
+              pillTextColor={isDark ? "#000000ff" : "#ffffff"}
+              hoveredPillTextColor={isDark ? "#ffffffff" : "#000000"}
               className="shadow-2xl rounded-full"
             />
           </div>
         </div>
       </div>
-
       <div 
         ref={tickerRef}
-        className="absolute bottom-0 w-full bg-black/90 border-t border-white/10 py-3 lg:py-5 overflow-hidden flex z-20 pointer-events-auto"
+        className={`absolute bottom-0 w-full border-t py-3 lg:py-5 overflow-hidden flex z-20 pointer-events-auto transition-colors duration-500 
+          ${isDark 
+            ? 'bg-black/90 border-white/10 text-neutral-300' 
+            : 'bg-white/90 border-black/10 text-neutral-800'
+          }`}
       >
-        <div className="flex items-center whitespace-nowrap marquee">
+         <div className="flex items-center whitespace-nowrap marquee">
           {[
             ["Python", <SiPython />],
             ["Make", <TbBrandNextjs />],
@@ -256,14 +472,16 @@ function HeroSection({ scrollToSection }) {
             ["ReactJS", <SiReact />],
             ["Flutter", <SiFlutter />],
           ].map(([text, icon], i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 lg:gap-3 text-neutral-300 text-sm lg:text-lg font-medium px-4 lg:px-8"
-            >
-              <span className="text-xl lg:text-2xl opacity-80">{icon}</span>
-              <span>{text}</span>
-            </div>
-          ))}
+  <div
+    key={i}
+    className="ticker-item flex items-center gap-2 lg:gap-3 text-sm lg:text-lg font-medium px-4 lg:px-8 cursor-pointer"
+  >
+    <span className="tech-icon text-xl lg:text-2xl opacity-80">
+      {icon}
+    </span>
+    <span>{text}</span>
+  </div>
+))}
         </div>
         <div className="flex items-center whitespace-nowrap marquee">
           {[
@@ -277,33 +495,28 @@ function HeroSection({ scrollToSection }) {
             ["ReactJS", <SiReact />],
             ["Flutter", <SiFlutter />],
           ].map(([text, icon], i) => (
-            <div
-              key={`dup-${i}`}
-              className="flex items-center gap-2 lg:gap-3 text-neutral-300 text-sm lg:text-lg font-medium px-4 lg:px-8"
-            >
-              <span className="text-xl lg:text-2xl opacity-80">{icon}</span>
-              <span>{text}</span>
-            </div>
-          ))}
+  <div
+    key={i}
+    className="ticker-item flex items-center gap-2 lg:gap-3 text-sm lg:text-lg font-medium px-4 lg:px-8 cursor-pointer"
+  >
+    <span className="tech-icon text-xl lg:text-2xl opacity-80">
+      {icon}
+    </span>
+    <span>{text}</span>
+  </div>
+))}
         </div>
       </div>
 
-      <style jsx>{`
-        .animate-marquee {
-          animation: marquee 25s linear infinite;
-        }
-        @keyframes marquee {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
+      <style>{`
+        .animate-marquee { animation: marquee 25s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
     </section>
   );
 }
+
+
 gsap.registerPlugin(ScrollTrigger);
 
 const stackData = [
@@ -492,7 +705,7 @@ function CardStackSection() {
                     {stackData[activeIndex]?.title}
                   </h2>
                   <p className="text-zinc-400 text-sm lg:text-lg leading-relaxed max-w-lg lg:line-clamp-none">
-                    {stackData[activeIndex]?.desc}
+                    <ViewportDecryptedText text={stackData[activeIndex]?.desc || ""} />
                   </p>
                 </motion.div>
               </AnimatePresence>
@@ -546,7 +759,7 @@ function CardStackSection() {
                 className="flex items-center gap-2 lg:gap-3 text-neutral-300 text-sm lg:text-lg font-medium px-4 lg:px-8"
               >
                 <span className="text-xl lg:text-2xl opacity-80">{icon}</span>
-                <span>{text}</span>
+                <span><ViewportDecryptedText text={text} /></span>
               </div>
             ))}
           </div>
@@ -567,7 +780,7 @@ function CardStackSection() {
                 className="flex items-center gap-2 lg:gap-3 text-neutral-300 text-sm lg:text-lg font-medium px-4 lg:px-8"
               >
                 <span className="text-xl lg:text-2xl opacity-80">{icon}</span>
-                <span>{text}</span>
+                <span><ViewportDecryptedText text={text} /></span>
               </div>
             ))}
           </div>
@@ -735,7 +948,7 @@ function ProcessSection() {
               >
                 <div className="flex items-start md:-ml-20 lg:-ml-40 justify-center w-full">
                   <span className="text-xs md:text-xl font-mono mt-1 md:mt-0 mr-2 opacity-70">
-                    {step.id}
+                    <ViewportDecryptedText text={step.id} className="font-mono" />
                   </span>
 
                   <h2 
@@ -808,7 +1021,7 @@ function ProcessSection() {
                   className="ticker-item flex items-center gap-2 md:gap-3 text-neutral-400 text-sm md:text-lg font-medium px-4 md:px-8"
                 >
                   <span className="tech-icon text-lg md:text-2xl">{icon}</span>
-                  <span>{text}</span>
+                  <span><ViewportDecryptedText text={text} /></span>
                 </div>
               ))}
             </div>
@@ -816,7 +1029,7 @@ function ProcessSection() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .animate-marquee {
           animation: marquee 20s linear infinite;
         }
@@ -833,81 +1046,81 @@ function ProcessSection() {
   );
 }
 
-const StatsSection = () => {
-  const steps = [
-    {
-      id: "01",
-      title: "Unlocking the opportunity",
-      subtitle: "Business strategy",
-      content: [
-        "Before anything beautiful or brilliant gets built, we dig into the core of your business. We ask uncomfortably smart questions, uncover truths, and map where the real value lives. No random feature factories here — only direction that matters. The outcome? A strategy engineered to win.",
-      ],
-    },
-    {
-      id: "02",
-      title: "We help solve a range of business challenges",
-      subtitle: "Design & Execution",
-      content: [
-        "Once the path is clear, we design and prototype like scientists in a creative lab. We test, break, refine, repeat — until ideas become solutions people actually care about. Call it innovation, call it problem-solving. We call it Tuesday.",
-      ],
-    },
-    {
-      id: "03",
-      title: "Driving adoption and scale",
-      subtitle: "Growth & Analysis",
-      content: [
-        "Launching is just the kickoff. We help you define KPIs, set up analytics, and track what users love (and what they pretend to love). Our data detectives hunt for improvements to maximize performance and growth. We equip your team to scale independently—because you shouldn’t need us forever… even though we secretly hope you’ll stay.",
-      ],
-    },
-    {
-      id: "04",
-      title: "Sustained Innovation & Support",
-      subtitle: "Long-term Partnership",
-      content: [
-        "After launch, the evolution continues. Monitoring, updates, enhancements, improvements — continuous progress that keeps you ahead of change, not catching up to it. Think of us as the personal trainers of your product. Always pushing. Always improving. Never letting it get soft.",
-      ],
-    },
-  ];
+// const StatsSection = () => {
+//   const steps = [
+//     {
+//       id: "01",
+//       title: "Unlocking the opportunity",
+//       subtitle: "Business strategy",
+//       content: [
+//         "Before anything beautiful or brilliant gets built, we dig into the core of your business. We ask uncomfortably smart questions, uncover truths, and map where the real value lives. No random feature factories here — only direction that matters. The outcome? A strategy engineered to win.",
+//       ],
+//     },
+//     {
+//       id: "02",
+//       title: "We help solve a range of business challenges",
+//       subtitle: "Design & Execution",
+//       content: [
+//         "Once the path is clear, we design and prototype like scientists in a creative lab. We test, break, refine, repeat — until ideas become solutions people actually care about. Call it innovation, call it problem-solving. We call it Tuesday.",
+//       ],
+//     },
+//     {
+//       id: "03",
+//       title: "Driving adoption and scale",
+//       subtitle: "Growth & Analysis",
+//       content: [
+//         "Launching is just the kickoff. We help you define KPIs, set up analytics, and track what users love (and what they pretend to love). Our data detectives hunt for improvements to maximize performance and growth. We equip your team to scale independently—because you shouldn’t need us forever… even though we secretly hope you’ll stay.",
+//       ],
+//     },
+//     {
+//       id: "04",
+//       title: "Sustained Innovation & Support",
+//       subtitle: "Long-term Partnership",
+//       content: [
+//         "After launch, the evolution continues. Monitoring, updates, enhancements, improvements — continuous progress that keeps you ahead of change, not catching up to it. Think of us as the personal trainers of your product. Always pushing. Always improving. Never letting it get soft.",
+//       ],
+//     },
+//   ];
 
-  return (
-    <div className="w-full text-white font-sans pb-10 lg:pb-20">
-      {steps.map((step, index) => (
-        <div
-          key={index}
-          className="relative flex flex-col lg:flex-row w-full group"
-        >
-          <div className="w-full lg:w-[25%] px-6 lg:pl-20 pb-4 lg:pb-12 pt-8 lg:pt-0">
-            <div className="static lg:sticky lg:top-12">
-              <div className="text-[80px] lg:text-[150px] leading-none font-bold tracking-tighter text-white/90">
-                {step.id}
-              </div>
-            </div>
-          </div>
+//   return (
+//     <div className="w-full text-white font-sans pb-10 lg:pb-20">
+//       {steps.map((step, index) => (
+//         <div
+//           key={index}
+//           className="relative flex flex-col lg:flex-row w-full group"
+//         >
+//           <div className="w-full lg:w-[25%] px-6 lg:pl-20 pb-4 lg:pb-12 pt-8 lg:pt-0">
+//             <div className="static lg:sticky lg:top-12">
+//               <div className="text-[80px] lg:text-[150px] leading-none font-bold tracking-tighter text-white/90">
+//                 {step.id}
+//               </div>
+//             </div>
+//           </div>
 
-          <div
-            className={`w-full lg:w-[75%] flex flex-col lg:flex-row pt-4 lg:pt-10 pb-12 lg:pb-20 px-6 lg:pr-20 ${
-              index !== 0
-                ? "border-t border-gray-300/20 lg:border-gray-300"
-                : ""
-            }`}
-          >
-            <div className="w-full lg:w-[40%] pr-0 lg:pr-10 pt-2 mb-6 lg:mb-0">
-              <h2 className="text-3xl lg:text-4xl font-bold mb-3 lg:mb-4 leading-tight">
-                {step.title}
-              </h2>
-              <h3 className="text-base lg:text-lg font-medium text-gray-400 lg:text-gray-500 mt-2">
-                {step.subtitle}
-              </h3>
-            </div>
+//           <div
+//             className={`w-full lg:w-[75%] flex flex-col lg:flex-row pt-4 lg:pt-10 pb-12 lg:pb-20 px-6 lg:pr-20 ${
+//               index !== 0
+//                 ? "border-t border-gray-300/20 lg:border-gray-300"
+//                 : ""
+//             }`}
+//           >
+//             <div className="w-full lg:w-[40%] pr-0 lg:pr-10 pt-2 mb-6 lg:mb-0">
+//               <h2 className="text-3xl lg:text-4xl font-bold mb-3 lg:mb-4 leading-tight">
+//                 {step.title}
+//               </h2>
+//               <h3 className="text-base lg:text-lg font-medium text-gray-400 lg:text-gray-500 mt-2">
+//                 {step.subtitle}
+//               </h3>
+//             </div>
 
-            <div className="w-full lg:w-[60%] pl-0 lg:pl-20 lg:pr-20 text-lg lg:text-2xl text-gray-200 lg:text-white leading-relaxed">
-              <p className="whitespace-pre-line">{step.content.join(" ")}</p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+//             <div className="w-full lg:w-[60%] pl-0 lg:pl-20 lg:pr-20 text-lg lg:text-2xl text-gray-200 lg:text-white leading-relaxed">
+//               <p className="whitespace-pre-line">{step.content.join(" ")}</p>
+//             </div>
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// };
 
 export default App;
